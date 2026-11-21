@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>2Bs Restaurant & Dining | Dhaka</title>
+ <!-- Tailwind CSS -->
+ <script src="https://cdn.tailwindcss.com"></script>
+ <!-- Google Fonts -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+ <!-- Font Awesome Icons -->
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ 
+<script>
+ tailwind.config = {
+ theme: {
+ extend: {
+ colors: {
+ brandDark: '#1a120e',
+ brandBrown: '#2a1d17',
+ brandCardBg: '#f9f6f0',
+ brandOlive: '#3c482c',
+ brandOliveHover: '#2e3822',
+ brandAccent: '#d4a359',
+ brandGold: '#e5b869',
+ },
+ fontFamily: {
+ serif: ['"Playfair Display"', 'serif'],
+ sans: ['"Poppins"', 'sans-serif'],
+ }
+ }
+ }
+ }
+ </script>
+ <style>
+ /* Custom Scrollbars */
+ ::-webkit-scrollbar {
+ width: 6px;
+ height: 6px;
+ }
+ ::-webkit-scrollbar-track {
+ background: rgba(0, 0, 0, 0.1);
+ }
+ ::-webkit-scrollbar-thumb {
+ background: #3c482c;
+ border-radius: 4px;
+ }
+ 
+.no-scrollbar::-webkit-scrollbar {
+ display: none;
+ }
+ .no-scrollbar {
+ -ms-overflow-style: none;
+ scrollbar-width: none;
+ }
+
+ /* Modal backdrop blur fallback */
+ .backdrop-blur-custom {
+ backdrop-filter: blur(8px);
+ -webkit-backdrop-filter: blur(8px);
+ }
+
+ html { scroll-behavior: smooth; }
+ body { overflow-x: hidden; }
+ body.modal-open { overflow: hidden !important; }
+ #item-detail-modal { overscroll-behavior: contain; }
+ #item-detail-card { background: #f9f6f0; border: 1px solid rgba(229,184,105,.28); }
+ #item-detail-card .detail-image-header { position: relative; }
+ #item-detail-card .detail-image-header::after { content: ""; position: absolute; inset: auto 0 0; height: 34%; background: linear-gradient(to bottom, transparent, rgba(26,18,14,.22)); pointer-events: none; }
+ #item-detail-card .detail-content { background: linear-gradient(180deg, #f9f6f0 0%, #f5efe5 100%); }
+ #item-detail-card .detail-meta { display: flex; flex-wrap: wrap; gap: 10px; color: #71685c; font-size: 11px; }
+ #item-detail-card .detail-meta > div { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border: 1px solid #e5dccd; background: rgba(255,255,255,.58); border-radius: 999px; }
+
+ .autoDisplay{
+ animation: autoDisplayAnimation both;
+ animation-timeline: view(70% 5%);
+ }
+
+ @keyframes autoDisplayAnimation{
+ from{
+ opacity: 0;
+ transform: translateY(200px) scale(0.3);
+ } to{
+ opacity: 1;
+ transform: translateY(0) scale(1);
+ }
+ }
+
+ img { max-width: 100%; }
+ button, a, input { -webkit-tap-highlight-color: transparent; }
+ @media (max-width: 380px) {
+ #detail-title { font-size: 1.25rem; }
+ #detail-price { font-size: 1.1rem; }
+ }
+
+ /* Shopping cart styles */
+ .cart-backdrop { position: fixed; inset: 0; z-index: 55; background: rgba(0,0,0,.68); opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+ .cart-backdrop.open { opacity: 1; pointer-events: auto; }
+ .cart-drawer { position: fixed; z-index: 60; top: 0; right: 0; height: 100dvh; width: min(100%, 430px); background: #f9f6f0; color: #1a120e; transform: translateX(105%); transition: transform .3s ease; display: flex; flex-direction: column; box-shadow: -18px 0 50px rgba(0,0,0,.25); }
+ .cart-drawer.open { transform: translateX(0); }
+ .cart-item { display: grid; grid-template-columns: 68px minmax(0,1fr); gap: 12px; padding: 14px 0; border-bottom: 1px solid #e7dfd2; }
+ .cart-item img { width: 68px; height: 68px; object-fit: cover; border-radius: 12px; background: #e7dfd2; }
+ .qty-control { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+ .qty-control button { width: 28px; height: 28px; border-radius: 50%; background: #3c482c; color: #fff; font-weight: 700; }
+ .qty-control .remove-item { margin-left: auto; background: transparent; color: #9b3d32; font-size: 18px; }
+ .cart-toast { position: fixed; z-index: 70; left: 50%; bottom: 22px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; background: #3c482c; color: #fff; padding: 11px 18px; border-radius: 999px; font-size: 12px; box-shadow: 0 8px 25px rgba(0,0,0,.25); transition: .2s ease; }
+ .cart-toast.show { opacity: 1; transform: translate(-50%, 0); }
+ @media (prefers-reduced-motion: reduce) { .cart-drawer, .cart-backdrop, .cart-toast { transition: none; } }
+ </style>
+</head>
+<body class="bg-brandDark text-stone-100 font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-brandAccent selection:text-brandDark">
+
+ <!-- MAIN VIEW CONTAINER -->
+ <main class="flex-grow">
+ 
+<!-- ================= LANDING PAGE SECTION ================= -->
+ <section id="landing-view" class="relative min-h-screen flex flex-col justify-center items-center text-center px-4 py-12 overflow-hidden">
+ <!-- Homepage exterior background -->
+ <div class="absolute inset-0 z-0 pointer-events-none" aria-hidden="true">
+ <img src="exterior.jpg" alt="" class="absolute inset-0 w-full h-full object-cover object-center brightness-[0.7]" fetchpriority="high">
+ <div class="absolute inset-0 bg-gradient-to-b from-black/45 via-brandDark/45 to-brandDark/75"></div>
+ </div>
+ <!-- Content Banner Container -->
+ <div class="relative z-10 w-full max-w-3xl mx-auto space-y-6 px-4 sm:px-6">
+ <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brandOlive/80 border border-brandAccent/30 backdrop-blur-md text-brandGold text-xs uppercase tracking-widest font-semibold shadow-xl">
+ <i class="fa-solid fa-sparkles"></i> Fine Dining & Asian Fusion
+ </div>
+
+ <div class="space-y-2">
+ <p class="text-stone-300 tracking-widest text-xs uppercase font-medium">Discover a Memorable</p>
+ <h2 class="font-serif text-4xl sm:text-6xl lg:text-7xl font-bold text-stone-100 tracking-tight leading-tight">
+ Dining Experience
+ </h2>
+ <p class="text-brandGold font-serif italic text-lg sm:text-xl">at 2Bs Restaurant</p>
+ </div>
+
+ <p class="text-stone-300 text-sm max-w-md mx-auto leading-relaxed">
+ Savor our exquisite selection of Momos, Nasi Goreng, Baked Pasta, Ramen & signature Set Platters prepared with authentic flavors.
+ </p>
+
+ <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
+ <button onclick="showView('menu')" class="w-full sm:w-auto px-8 py-3.5 rounded-full bg-brandOlive hover:bg-brandOliveHover text-stone-100 font-medium text-sm transition-all shadow-lg shadow-brandOlive/40 border border-brandGold/20 flex items-center justify-center gap-2 group">
+ <span>Explore Our Menu</span>
+ <i class="fa-solid fa-arrow-right text-brandGold group-hover:translate-x-1 transition-transform"></i>
+ </button>
+ <a href="https://wa.me/8801882802201?text=Hello%2C%20I%20would%20like%20to%20book%20a%20table%20at%202Bs%20Restaurant." target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-8 py-3.5 rounded-full bg-brandCardBg text-brandDark hover:bg-white font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2">
+ <i class="fa-solid fa-utensils text-brandOlive"></i>
+ <span>Order Online!</span>
+ </a>
+ </div>
+
+
+ <!-- Info Cards -->
+ <div class="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-left max-w-2xl mx-auto">
+ <a href="https://maps.app.goo.gl/Wo2VeJTM3KMfHSFw8" target="_blank" rel="noopener noreferrer" class="bg-brandBrown/80 border border-stone-800 rounded-xl p-3.5 backdrop-blur-md flex items-start gap-3 hover:border-brandGold/60 transition group cursor-pointer">
+ <i class="fa-solid fa-location-dot text-brandGold text-lg mt-0.5 group-hover:scale-110 transition-transform"></i>
+ <div>
+ <h4 class="text-xs font-semibold text-stone-200 flex items-center gap-1">
+ Location <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-stone-400 group-hover:text-brandGold"></i>
+ </h4>
+ <p class="text-xs text-stone-400">102 Aga Sadek Road, Dhaka-1000</p>
+ </div>
+ </a>
+ <div class="bg-brandBrown/80 border border-stone-800 rounded-xl p-3.5 backdrop-blur-md flex items-start gap-3">
+ <i class="fa-solid fa-clock text-brandGold text-lg mt-0.5"></i>
+ <div>
+ <h4 class="text-xs font-semibold text-stone-200">Opening Hours</h4>
+ <p class="text-xs text-stone-400">Everyday: 2:00 PM – 11:00 PM</p>
+ </div>
+ </div>
+ </div>
+ </div>
+ </section>
+
+
+ <!-- ================= MENU PAGE VIEW (MATCHING IMAGE 4) ================= -->
+ <section id="menu-view" class="hidden min-h-screen bg-brandDark pb-12 sm:pb-16">
+ <!-- Mobile App style viewport wrap wrapper -->
+ <div class="w-full max-w-7xl mx-auto min-h-screen bg-brandDark flex flex-col sm:px-4 lg:px-8">
+ 
+<!-- Menu App Top Header -->
+ <div class="px-4 sm:px-6 lg:px-8 py-4 bg-brandDark/95 backdrop-blur-md sticky top-0 z-20 space-y-4 border-b border-stone-800/70">
+ <div class="flex items-center justify-between">
+ <button onclick="showView('landing')" class="w-10 h-10 rounded-full bg-brandBrown flex items-center justify-center text-stone-300 hover:text-white transition">
+ <i class="fa-solid fa-chevron-left"></i>
+ </button>
+ <h2 class="font-serif text-2xl font-bold text-stone-100">Our Menu</h2>
+ <button id="openCart" onclick="openCart()" aria-label="Open shopping cart" class="relative min-w-10 h-10 px-3 rounded-full bg-brandBrown flex items-center justify-center gap-2 text-stone-200 hover:text-brandGold transition border border-stone-700/70">
+ <i class="fa-solid fa-bag-shopping"></i><span class="text-xs">Cart</span><b id="cartCount" class="min-w-5 h-5 px-1 rounded-full bg-brandGold text-brandDark text-[10px] flex items-center justify-center">0</b>
+ </button>
+ </div>
+
+ <!-- Search Input Bar -->
+ <div class="relative">
+ <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 text-sm"></i>
+ <input type="text" id="search-input" oninput="handleSearch()" placeholder="Search dishes, ramen, platters..." 
+class="w-full bg-brandBrown border border-stone-700/60 rounded-full py-2.5 pl-10 pr-4 text-xs text-stone-100 placeholder-stone-400 focus:outline-none focus:border-brandGold transition">
+ </div>
+
+ <!-- Category Pills Horizontal Scroll -->
+ <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1" id="category-pills">
+ <!-- Dynamic Pills generated by JS -->
+ </div>
+ </div>
+
+ <!-- Menu Items Grid Container -->
+ <div class="px-4 sm:px-6 lg:px-8 py-5 flex-grow">
+ <div id="menu-items-grid" class="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-5">
+ <!-- Dynamic Menu Cards Populated Here -->
+ </div>
+ <div id="no-results" class="hidden text-center py-12 space-y-3">
+ <i class="fa-solid fa-bowl-food text-4xl text-stone-600"></i>
+ <p class="text-stone-400 text-sm">No items found matching your filter.</p>
+ </div>
+ </div>
+ </div>
+ </section>
+ </main>
+
+ <!-- ================= ITEM DETAIL MODAL (EXACT MATCH IMAGE 5) ================= -->
+ <div id="item-detail-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-custom flex justify-center items-end sm:items-center p-0 sm:p-4 opacity-0 pointer-events-none transition-all duration-300">
+ <div class="bg-brandCardBg text-stone-900 w-full max-w-2xl rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl max-h-[92dvh] flex flex-col transform translate-y-10 transition-all duration-300" id="item-detail-card">
+ 
+<!-- Detail Image Header -->
+ <div class="detail-image-header relative h-52 sm:h-64 lg:h-72 bg-stone-200 overflow-hidden shrink-0">
+ <img id="detail-img" src="" alt="" class="w-full h-full object-cover" decoding="async" onerror="this.onerror=null; this.style.display='none';">
+ <!-- Top Close Button -->
+ <button onclick="closeItemModal()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-stone-800 hover:bg-white shadow-md transition">
+ <i class="fa-solid fa-chevron-left"></i>
+ </button>
+ 
+</div>
+
+ <!-- Scrollable Content Body -->
+ <div class="detail-content p-5 sm:p-6 lg:p-7 overflow-y-auto overscroll-contain space-y-5 text-stone-900 pb-8">
+ <!-- Header Title & Price -->
+ <div>
+ <div class="flex items-start justify-between">
+ <h3 id="detail-title" class="font-serif text-2xl font-bold text-stone-900 leading-tight"></h3>
+ <span id="detail-price" class="font-serif font-bold text-xl text-stone-900 shrink-0 ml-2"></span>
+ </div>
+ <p id="detail-subtitle" class="text-xs text-stone-500 uppercase tracking-wider font-medium mt-1"></p>
+ </div>
+
+ <div class="detail-meta">
+ <div><i class="fa-regular fa-clock text-brandOlive"></i><span>20-30 min</span></div>
+ <div><i class="fa-solid fa-fire text-orange-500"></i><span>~420 cal</span></div>
+ </div>
+
+ <!-- Item Description -->
+ <p id="detail-desc" class="text-xs leading-relaxed text-stone-600">
+ <!-- Populated via JS -->
+ </p>
+
+ <!-- Ingredients Visual List -->
+ <div>
+ <h4 class="text-xs font-bold text-stone-900 tracking-wide uppercase mb-2">Ingredients</h4>
+ <div id="detail-ingredients" class="flex flex-wrap gap-2">
+ <!-- Ingredient Pills Populated via JS -->
+ </div>
+ </div>
+ <button type="button" onclick="addActiveItemToCart()" class="w-full mt-2 py-3 rounded-full bg-brandOlive hover:bg-brandOliveHover text-white font-semibold text-sm flex items-center justify-center gap-2 transition">
+ <i class="fa-solid fa-bag-shopping"></i> Add to cart
+ </button>
+ </div>
+
+ </div>
+ </div>
+
+ <!-- SHOPPING CART DRAWER -->
+ <div id="cartBackdrop" class="cart-backdrop" onclick="closeCart()"></div>
+ <aside id="cartDrawer" class="cart-drawer" aria-label="Your shopping cart" aria-hidden="true">
+ <div class="p-5 sm:p-6 border-b border-stone-200 flex items-center justify-between">
+ <div><p class="text-[10px] uppercase tracking-[.2em] text-stone-500 font-semibold">Your selection</p><h2 class="font-serif text-2xl font-bold">Your cart.</h2></div>
+ <button type="button" onclick="closeCart()" aria-label="Close cart" class="w-9 h-9 rounded-full bg-stone-200 text-stone-700 text-2xl leading-none">&times;</button>
+ </div>
+ <div id="cartItems" class="flex-1 overflow-y-auto px-5 sm:px-6">
+ <div class="py-12 text-center text-stone-500"><div class="text-4xl mb-3">♡</div><h3 class="font-semibold text-stone-800">Your cart is waiting.</h3><p class="text-xs mt-1">Add a few favourites to get started.</p><button type="button" onclick="closeCart();showView('menu')" class="mt-4 text-xs font-semibold text-brandOlive">Browse menu →</button></div>
+ </div>
+ <div class="p-5 sm:p-6 border-t border-stone-200 bg-white/70 space-y-3">
+ <div class="flex items-center justify-between text-sm"><span class="text-stone-600">Subtotal</span><b id="cartTotal" class="text-lg">৳0</b></div>
+ <p class="text-[11px] text-stone-500">Delivery charges, if applicable, can be confirmed on WhatsApp.</p>
+ <button type="button" id="checkoutBtn" onclick="checkout()" class="w-full py-3 rounded-full bg-brandOlive hover:bg-brandOliveHover text-white font-semibold text-sm flex items-center justify-center gap-2 transition">Order via WhatsApp <i class="fa-brands fa-whatsapp"></i></button>
+ <button type="button" onclick="clearCart()" class="w-full text-xs text-stone-500 hover:text-red-700 py-1">Clear cart</button>
+ </div>
+ </aside>
+ <div id="cartToast" class="cart-toast" role="status" aria-live="polite"></div>
+
+ <!-- FOOTER -->
+ <footer class="bg-brandDark border-t border-stone-800 py-6 text-center text-stone-400 text-xs">
+ <div class="max-w-xl mx-auto px-4 space-y-3">
+ <div class="font-serif font-bold text-stone-200 text-base">2Bs Restaurant</div>
+ <a href="https://maps.google.com/?q=102+Aga+Sadeq+Road,+Dhaka-1000" target="_blank" rel="noopener noreferrer" class="inline-block hover:text-brandGold transition">
+ <i class="fa-solid fa-location-dot text-brandGold mr-1"></i> 102 Aga Sadek Road, Dhaka-1000 | Phone: +8801717072818
+ </a>
+ <div class="flex items-center justify-center gap-4 pt-1">
+ <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="w-8 h-8 rounded-full bg-brandBrown flex items-center justify-center text-stone-300 hover:text-brandGold transition">
+ <i class="fa-brands fa-facebook-f text-xs"></i>
+ </a>
+ <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" class="w-8 h-8 rounded-full bg-brandBrown flex items-center justify-center text-stone-300 hover:text-brandGold transition">
+ <i class="fa-brands fa-instagram text-xs"></i>
+ </a>
+ </div>
+ <p class="text-stone-500 text-[11px]">&copy; 2026 2Bs Found. All Rights Reserved.</p>
+ </div>
+ </footer>
+
+
+ <!-- JAVASCRIPT APP LOGIC -->
+ <script>
+ // Comprehensive Dataset Extracted from Restaurant Images
+ const MENU_DATA = [
+ // STARTERS (Image 1)
+ { id: 1, category: 'Starters', name: 'Thai Soup', price: 160, image: 'dishes/thai-soup.jpg', desc: 'Authentic fragrant Thai soup enriched with traditional herbs, lemongrass, and subtle chicken broth spice.', ingredients: ['Lemongrass', 'Chicken', 'Herbs', 'Broth'] },
+ { id: 2, category: 'Starters', name: 'Corn Soup', price: 150, image: 'dishes/corn-soup.jpg', desc: 'Rich creamy sweet corn soup prepared with beaten egg ribbons and shredded chicken.', ingredients: ['Sweet Corn', 'Egg', 'Chicken', 'Butter'] },
+ { id: 3, category: 'Starters', name: 'Chicken Soup', price: 150, image: 'dishes/3.jpg', desc: 'Warm hearty clear chicken broth soup with light garlic seasoning and micro herbs.', ingredients: ['Chicken Stock', 'Garlic', 'Black Pepper', 'Herbs'] },
+ { id: 4, category: 'Starters', name: 'French Fries', price: 160, image: 'dishes/4.jpg', desc: 'Crispy golden French fries tossed in sea salt and served with tangy tomato dip.', ingredients: ['Potato', 'Sea Salt', 'Special Seasoning'] },
+ { id: 5, category: 'Starters', name: 'Cheese Fries', price: 260, image: 'dishes/cheesefries.jpg', desc: 'Crispy french fries generously smothered in hot melted cheddar cheese sauce.', ingredients: ['Fries', 'Cheddar Cheese', 'Paprika', 'Herbs'] },
+ { id: 6, category: 'Starters', name: 'Spring Roll', price: 270, image: 'dishes/spring-roll.jpg', desc: 'Crispy golden rolls filled with seasoned sautéed vegetables and minced chicken.', ingredients: ['Vegetables', 'Minced Chicken', 'Crispy Wrapper', 'Sweet Chili'] },
+
+ // MOMOS (Image 1)
+ { id: 7, category: 'Momos', name: 'Steamed Momo', price: 150, image: 'dishes/7.jpg', desc: 'Delicate steamed dumplings stuffed with spiced minced chicken, served with spicy sesame chutney.', ingredients: ['Chicken', 'Ginger', 'Garlic', 'Dumpling Dough'] },
+ { id: 8, category: 'Momos', name: 'Milk Cheese Momo', price: 230, image: 'dishes/8.jpg', desc: 'Succulent dumplings tossed in a rich creamy milk and melted mozzarella cheese reduction.', ingredients: ['Chicken Momo', 'Milk Sauce', 'Mozzarella', 'Herbs'] },
+ { id: 9, category: 'Momos', name: 'Cheese Alfredo', price: 260, image: 'dishes/9.jpg', desc: 'Steamed momos bathed in a tangy Italian tomato basil sauce baked with extra cheese.', ingredients: ['Momos', 'Tomato Sauce', 'Basil', 'Mozzarella Cheese'] },
+ { id: 10, category: 'Momos', name: 'Cheese Tomato Momo', price: 280, image: 'dishes/10.jpg', desc: 'Rich chicken dumplings heavily loaded with melted mozzarella cheese and oven roasted.', ingredients: ['Chicken Dumplings', 'Loaded Cheese', 'Oregano'] },
+ { id: 11, category: 'Momos', name: 'Nut Satay', price: 210, image: 'dishes/11.jpg', desc: 'Crispy pan-seared momos coated in a spicy chili garlic soy glaze with fresh scallions.', ingredients: ['Pan Fried Momo', 'Garlic Chili Sauce', 'Spring Onion'] },
+ { id: 12, category: 'Momos', name: 'Baked Momo', price: 300, image: 'dishes/12.jpg', desc: 'Golden crispy deep-fried chicken momos paired with house special spicy dip.', ingredients: ['Fried Momo', 'Chili Sauce', 'Herbs'] },
+
+ // RICE (Image 1)
+ { id: 13, category: 'Rice', name: 'Nasi Goreng Original', price: 200, image: 'dishes/13.jpg', desc: 'Classic Indonesian spiced fried rice topped with a sunny-side-up fried egg and cucumber slice.', ingredients: ['Indonesian Rice', 'Egg', 'Chili Sauce', 'Cucumber'] },
+ { id: 14, category: 'Rice', name: 'Nasi Goreng Rashvalle', price: 270, image: 'dishes/14.jpg', desc: 'Flavorful specialty fried rice topped with fried egg and chicken curry gravy.', ingredients: ['Fried Rice', 'Chicken Curry', 'Fried Egg', 'Spices'] },
+ { id: 15, category: 'Rice', name: 'Nasi Goreng Fajitas', price: 260, image: 'dishes/15.jpg', desc: 'Fusion Indonesian fried rice served with sizzling bell peppers and chicken fajita strips.', ingredients: ['Fried Rice', 'Chicken Fajitas', 'Bell Peppers', 'Egg'] },
+ { id: 16, category: 'Rice', name: 'Nasi Goreng Beef Curry', price: 400, image: 'dishes/ngbeefcurry.jpg', desc: 'Rich slow-cooked spicy beef curry served over aromatic savory fried rice.', ingredients: ['Tender Beef', 'Rich Curry Sauce', 'Fried Rice', 'Fried Egg'] },
+ { id: 17, category: 'Rice', name: 'Thai Fried Rice', price: 250, image: 'dishes/17.jpg', desc: 'Authentic Thai jasmine fried rice stir-fried with mixed garden vegetables and egg.', ingredients: ['Jasmine Rice', 'Soy Sauce', 'Egg', 'Vegetables'] },
+ { id: 18, category: 'Rice', name: 'Chicken Meatball Rice', price: 300, image: 'dishes/18.jpg', desc: 'Juicy glazed chicken meatballs served over hot wok-fried rice.', ingredients: ['Chicken Meatballs', 'Fried Rice', 'Special Sauce'] },
+
+ // NOODLES (Image 1)
+ { id: 19, category: 'Noodles', name: 'Chicken Chowmein', price: 250, image: 'dishes/19.jpg', desc: 'Stir-fried wok noodles loaded with tender chicken slices and crisp seasonal vegetables.', ingredients: ['Noodles', 'Chicken Slices', 'Capsicum', 'Soy Sauce'] },
+ { id: 20, category: 'Noodles', name: 'Beef Chowmein', price: 370, image: 'dishes/20.jpg', desc: 'Wok-tossed noodles with seasoned sliced beef strips, onions, and spicy dark soy sauce.', ingredients: ['Beef Strips', 'Noodles', 'Onions', 'Dark Soy'] },
+ { id: 21, category: 'Noodles', name: 'Special Chowmein', price: 400, image: 'dishes/21.jpg', desc: "Chef's signature loaded chowmein featuring chicken, beef, prawns, and egg.", ingredients: ['Mixed Meats', 'Prawns', 'Noodles', 'Vegetables'] },
+ { id: 22, category: 'Noodles', name: 'Chicken Steak Ramen', price: 260, image: 'dishes/22.jpg', desc: 'Rich ramen noodles served in savory chicken broth topped with grilled chicken steak.', ingredients: ['Ramen Noodles', 'Grilled Chicken', 'Broth', 'Boiled Egg'] },
+ { id: 23, category: 'Noodles', name: 'Meatball Ramen', price: 300, image: 'dishes/23.jpg', desc: 'Warm comforting noodle soup topped with seasoned chicken meatballs and sesame oil.', ingredients: ['Chicken Meatballs', 'Ramen', 'Rich Stock', 'Scallions'] },
+ { id: 24, category: 'Noodles', name: 'Meatball Ramen with Momo', price: 350, image: 'dishes/meatballramenwmomo.jpg', desc: 'Ultimate ramen bowl topped with chicken meatballs and delicate steamed momos.', ingredients: ['Steamed Momos', 'Meatballs', 'Ramen Noodles', 'Broth'] },
+
+ // PASTA (Image 1)
+ { id: 25, category: 'Pasta', name: 'Oven Baked Pasta Chicken', price: 260, image: 'dishes/25.jpg', desc: 'Penne pasta baked in a rich white cheese sauce with tender chicken pieces and herbs.', ingredients: ['Penne Pasta', 'Chicken', 'Melted Cheese', 'White Sauce'] },
+ { id: 26, category: 'Pasta', name: 'Oven Baked Pasta Beef', price: 350, image: 'dishes/26.jpg', desc: 'Cheesy oven-baked pasta loaded with spicy minced beef and melted mozzarella crust.', ingredients: ['Minced Beef', 'Pasta', 'Mozzarella', 'Red Sauce'] },
+ { id: 27, category: 'Pasta', name: 'Special Oven Baked Pasta', price: 400, image: 'dishes/27.jpg', desc: 'Supreme loaded baked pasta featuring chicken, beef, sausages, and double cheese.', ingredients: ['Chicken & Beef', 'Sausage', 'Pasta', 'Double Cheese'] },
+ { id: 28, category: 'Pasta', name: 'Chicken Meatball Pasta', price: 350, image: 'dishes/28.jpg', desc: 'Italian penne pasta topped with juicy chicken meatballs tossed in marinara sauce.', ingredients: ['Chicken Meatballs', 'Marinara', 'Penne', 'Parmesan'] },
+ { id: 29, category: 'Pasta', name: 'Seafood Pasta', price: 400, image: 'dishes/29.jpg', desc: 'Creamy garlic pasta loaded with mixed seafood, prawns, and parmesan flakes.', ingredients: ['Prawns', 'Mixed Seafood', 'Cream Sauce', 'Pasta'] },
+ { id: 30, category: 'Pasta', name: 'White Cream Pasta', price: 250, image: 'dishes/30.jpg', desc: 'Velvety smooth white sauce penne pasta infused with garlic butter and herbs.', ingredients: ['Penne Pasta', 'Garlic Butter', 'Heavy Cream', 'Oregano'] },
+
+ // SET PLATTERS (Image 2)
+ { id: 84, category: 'Set Platters', name: 'Fried Rice Set Platter', price: 250, image: 'dishes/84.jpg', desc: 'Fried Rice + 1 pc Chicken Strip + Chinese Vegetables Curry + Soft Drink', ingredients: ['Fried Rice', 'Chicken Strip', 'Chinese Veg Curry', 'Soft Drink'] },
+ { id: 85, category: 'Set Platters', name: 'Fried Rice & Nashville Platter', price: 300, image: 'dishes/85.jpg', desc: 'Fried Rice + 1 pc Fried Chicken Strip + Nashville Chicken Curry + Soft Drink', ingredients: ['Fried Rice', 'Nashville Chicken', 'Chicken Strip', 'Soft Drink'] },
+ { id: 86, category: 'Set Platters', name: 'Fried Rice & Fajitas Platter', price: 350, image: 'dishes/86.jpg', desc: 'Fried Rice + 1 pc Fried Chicken Strip + Chinese Veg Curry + Fajitas Chicken Curry + Soft Drink', ingredients: ['Fried Rice', 'Fajitas Curry', 'Chicken Strip', 'Chinese Veg'] },
+ { id: 87, category: 'Set Platters', name: 'Fried Rice & Beef Curry Platter', price: 400, image: 'dishes/87.jpg', desc: 'Fried Rice + 1 pc Fried Chicken Strip + Chinese Veg Curry + 2Bs Beef Curry + Soft Drink', ingredients: ['Fried Rice', '2Bs Beef Curry', 'Chicken Strip', 'Chinese Veg'] },
+ { id: 88, category: 'Set Platters', name: 'Deluxe Fried Rice Platter', price: 550, image: 'dishes/88.jpg', desc: 'Fried Rice + Chicken Strip + Chinese Veg + Meatball Curry + 2Bs Beef Curry + Soft Drink', ingredients: ['Fried Rice', 'Beef Curry', 'Meatball Curry', 'Chicken Strip'] },
+ { id: 89, category: 'Set Platters', name: 'Nasi Goreng Set Platter', price: 270, image: 'dishes/89.jpg', desc: 'Nasi Goreng + 1 pc Chicken Tender + Chinese Vegetables Curry + Soft Drink', ingredients: ['Nasi Goreng', 'Chicken Tender', 'Chinese Veg', 'Soft Drink'] },
+ { id: 90, category: 'Set Platters', name: 'Nasi Goreng & Nashville Platter', price: 320, image: 'dishes/90.jpg', desc: 'Nasi Goreng + 1 pc Chicken Tender + Nashville Chicken Curry + Soft Drink', ingredients: ['Nasi Goreng', 'Nashville Chicken', 'Chicken Tender', 'Soft Drink'] },
+ { id: 91, category: 'Set Platters', name: 'Nasi Goreng & Fajitas Platter', price: 370, image: 'dishes/91.jpg', desc: 'Nasi Goreng + 1 pc Chicken Tender + Chinese Veg Curry + Fajitas Chicken Curry + Soft Drink', ingredients: ['Nasi Goreng', 'Fajitas Curry', 'Chicken Tender', 'Chinese Veg'] },
+ { id: 92, category: 'Set Platters', name: 'Nasi Goreng & Beef Curry Platter', price: 420, image: 'dishes/92.jpg', desc: 'Nasi Goreng + 1 pc Chicken Tender + Chinese Veg Curry + 2Bs Beef Curry + Soft Drink', ingredients: ['Nasi Goreng', 'Beef Curry', 'Chicken Tender', 'Chinese Veg'] },
+ { id: 93, category: 'Set Platters', name: 'Deluxe Nasi Goreng Platter', price: 570, image: 'dishes/93.jpg', desc: 'Nasi Goreng + Chicken Tender + Chinese Veg + Meatball Curry + 2Bs Beef Curry + Soft Drink', ingredients: ['Nasi Goreng', 'Beef Curry', 'Meatball Curry', 'Chicken Tender'] },
+ { id: 94, category: 'Set Platters', name: 'Chowmein & Fajitas Platter', price: 320, image: 'dishes/94.jpg', desc: 'Egg Vegetable Chowmein + Chicken Fajitas Curry + Soft Drink', ingredients: ['Egg Veg Chowmein', 'Chicken Fajitas', 'Soft Drink'] },
+ { id: 95, category: 'Set Platters', name: 'Chowmein & Nashville Platter', price: 350, image: 'dishes/95.jpg', desc: 'Egg Vegetable Chowmein + Chicken Nashville Curry + Soft Drink', ingredients: ['Chowmein', 'Nashville Chicken', 'Soft Drink'] },
+ { id: 96, category: 'Set Platters', name: 'Deluxe Chowmein Platter', price: 400, image: 'dishes/97.jpg', desc: 'Chicken Chowmein + Red Chicken Curry + Soft Drink', ingredients: ['Chicken Chowmein', 'Red Chicken Curry', 'Soft Drink'] },
+
+ // DRINKS & DESSERTS (Image 3)
+ { id: 44, category: 'Drinks & Desserts', name: 'Sparkling Lemon Up', price: 80, image: 'dishes/sparkling-lemon-up.jpg', desc: 'Refreshing sparkling soda pop infused with fresh zesty lemon.', ingredients: ['Sparkling Soda', 'Lemon Zest', 'Mint'] },
+ { id: 45, category: 'Drinks & Desserts', name: 'Sparkling Strawberry Up', price: 100, image: 'dishes/sparkling-strawberry-up.jpg', desc: 'Fizzy sparkling soda infused with sweet strawberry puree.', ingredients: ['Strawberry Syrup', 'Soda Water', 'Ice'] },
+ { id: 46, category: 'Drinks & Desserts', name: 'Thai Tea Vanilla Shake', price: 150, image: 'dishes/thai-tea-vanilla-shake.jpg', desc: 'Creamy frosted shake blending authentic Thai tea with sweet vanilla ice cream.', ingredients: ['Thai Tea', 'Vanilla Ice Cream', 'Condensed Milk'] },
+ { id: 47, category: 'Drinks & Desserts', name: 'Cadbury Vanilla Shake', price: 190, image: 'dishes/cadbury-vanilla-shake.jpg', desc: 'Decadent milk shake loaded with Cadbury chocolate and vanilla ice cream.', ingredients: ['Cadbury Chocolate', 'Vanilla Ice Cream', 'Whipped Cream'] },
+ { id: 48, category: 'Drinks & Desserts', name: 'Matcha Chocolate Shake', price: 250, image: 'dishes/matcha-chocolate-shake.jpg', desc: 'Premium Japanese matcha blended with rich dark chocolate fudge.', ingredients: ['Japanese Matcha', 'Dark Chocolate', 'Milk'] },
+ { id: 49, category: 'Drinks & Desserts', name: 'Dubai Chocolate Pistachio Shake', price: 300, image: 'dishes/dubai-chocolate-pistachio-shake.jpg', desc: 'Viral special shake combining pistachio cream, crunchy kataifi crunch, and chocolate sauce.', ingredients: ['Pistachio Cream', 'Chocolate', 'Kataifi', 'Milk'] },
+ { id: 50, category: 'Drinks & Desserts', name: 'Sweet Deshi Lacchi', price: 120, image: 'dishes/sweet-deshi-lacchi.jpg', desc: 'Traditional churned yogurt smoothie infused with cardamom and rose water.', ingredients: ['Curd', 'Cardamom', 'Sugar', 'Rose Water'] },
+ { id: 51, category: 'Drinks & Desserts', name: 'Strawberry Lacchi', price: 150, image: 'dishes/strawberry-lacchi.jpg', desc: 'Rich churned yogurt lassi infused with natural strawberry pulp.', ingredients: ['Yogurt', 'Strawberry', 'Sugar'] },
+ { id: 52, category: 'Drinks & Desserts', name: 'Chocolate Mousse', price: 150, image: 'dishes/chocolate-mousse.jpg', desc: 'Light and airy Belgian chocolate mousse topped with cocoa shavings.', ingredients: ['Belgian Chocolate', 'Heavy Cream', 'Cocoa Powder'] },
+ { id: 53, category: 'Drinks & Desserts', name: 'New York Cheese Cake', price: 200, image: 'dishes/new-york-cheese-cake.jpg', desc: 'Classic velvety cream cheese cake over a buttery graham cracker crust.', ingredients: ['Cream Cheese', 'Graham Crust', 'Vanilla'] },
+ { id: 54, category: 'Drinks & Desserts', name: 'Iced Lemon Tea', price: 110, image: 'dishes/iced-lemon-tea.jpg', desc: 'Chilled freshly brewed black tea flavored with lemon juice and mint leaves.', ingredients: ['Brewed Tea', 'Lemon Juice', 'Mint', 'Ice'] }
+ ];
+
+ const CATEGORIES = ['All', 'Starters', 'Momos', 'Rice', 'Noodles', 'Pasta', 'Set Platters', 'Drinks & Desserts'];
+
+ // App State Variables
+ let currentCategory = 'All';
+ let searchQuery = '';
+ let activeItem = null;
+ const WHATSAPP_NUMBER = "8801717072818"; // International format, digits only.
+ const CART_STORAGE_KEY = "2bs-cart";
+ let cart = [];
+ try { cart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) || "[]"); if (!Array.isArray(cart)) cart = []; } catch (_) { cart = []; }
+
+ // On Window Load
+ window.onload = function() {
+ renderCategoryPills();
+ renderMenuItems();
+ renderCart();
+ };
+
+ // Navigation Switcher
+ function showView(viewName) {
+ const landingView = document.getElementById('landing-view');
+ const menuView = document.getElementById('menu-view');
+
+ if (viewName === 'menu') {
+ landingView.classList.add('hidden');
+ menuView.classList.remove('hidden');
+ window.scrollTo({ top: 0, behavior: 'smooth' });
+ } else {
+ menuView.classList.add('hidden');
+ landingView.classList.remove('hidden');
+ window.scrollTo({ top: 0, behavior: 'smooth' });
+ }
+ }
+
+ // Render Category Filter Pills
+ function renderCategoryPills() {
+ const container = document.getElementById('category-pills');
+ container.innerHTML = CATEGORIES.map(cat => {
+ const isActive = cat === currentCategory;
+ const activeClass = isActive 
+? 'bg-brandOlive text-brandGold font-semibold border-brandGold/30 shadow-md' 
+: 'bg-brandBrown text-stone-300 hover:text-white border-stone-800';
+ return `<button onclick="setCategory('${cat}')" class="px-4 py-2 rounded-full text-xs shrink-0 border transition ${activeClass}">
+ ${cat}
+ </button>`;
+ }).join('');
+ }
+
+ function setCategory(cat) {
+ currentCategory = cat;
+ renderCategoryPills();
+ renderMenuItems();
+ }
+
+ function handleSearch() {
+ searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+ renderMenuItems();
+ }
+
+ // Render Cards in Grid (Matching Image 4 Layout)
+ function renderMenuItems() {
+ const grid = document.getElementById('menu-items-grid');
+ const noResults = document.getElementById('no-results');
+
+ let filtered = MENU_DATA.filter(item => {
+ const matchesCat = (currentCategory === 'All') || (item.category === currentCategory);
+ const matchesSearch = item.name.toLowerCase().includes(searchQuery) || item.desc.toLowerCase().includes(searchQuery);
+ return matchesCat && matchesSearch;
+ });
+
+ if (filtered.length === 0) {
+ grid.innerHTML = '';
+ noResults.classList.remove('hidden');
+ return;
+ }
+
+ noResults.classList.add('hidden');
+ grid.innerHTML = filtered.map(item => `
+ <div class="autoDisplay text-left w-full bg-brandBrown border border-stone-800/80 rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between group hover:border-brandGold/60 hover:-translate-y-0.5 transition duration-300">
+ <button type="button" onclick="openItemModal(${item.id})" aria-label="View ${item.name} details" class="text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandGold">
+ <div class="relative aspect-[5/4] sm:aspect-[4/3] overflow-hidden bg-stone-900">
+ <img src="${item.image}" alt="${item.name}" loading="lazy" decoding="async"
+ class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+ onerror="this.onerror=null; this.style.display='none';">
+ <span class="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-brandGold text-[10px] px-2 py-0.5 rounded-full font-medium">
+ ৳${item.price}
+ </span>
+ </div>
+ <div class="p-3 flex flex-col justify-between flex-grow">
+ <div>
+ <h4 class="font-serif font-bold text-stone-100 text-sm leading-snug line-clamp-1 group-hover:text-brandGold transition">${item.name}</h4>
+ <p class="text-[11px] text-stone-400 line-clamp-2 mt-1 leading-tight">${item.desc}</p>
+ </div>
+ <div class="mt-3 flex items-center justify-between pt-2 border-t border-stone-800/60">
+ <span class="font-serif font-bold text-xs text-brandGold">৳${item.price}</span>
+ <span class="w-7 h-7 rounded-full bg-white/10 group-hover:bg-brandOlive text-stone-200 group-hover:text-white flex items-center justify-center transition text-xs shadow-sm">
+ <i class="fa-solid fa-arrow-right"></i>
+ </span>
+ </div>
+ </div>
+ </button>
+ <div class="px-3 pb-3">
+ <button type="button" onclick="addToCart(${item.id})" class="w-full py-2 rounded-full bg-brandOlive hover:bg-brandOliveHover text-white text-xs font-semibold flex items-center justify-center gap-2 transition"><i class="fa-solid fa-plus"></i> Add to cart</button>
+ </div>
+ </div>
+ `).join('');
+ }
+
+ function bindDishImageFallback(imgEl, src) {
+ if (!imgEl) return;
+ imgEl.style.display = '';
+ const cleanSrc = String(src || '');
+ const variants = Array.from(new Set([
+ cleanSrc,
+ cleanSrc.replace(/ /g, '%20'),
+ cleanSrc.replace(/ /g, '-'),
+ cleanSrc.replace(/-/g, ''),
+ cleanSrc.replace(/%20/g, ''),
+ cleanSrc.replace(/\.jpg$/i, '.jpeg'),
+ cleanSrc.replace(/\.jpg$/i, '.png'),
+ cleanSrc.replace(/\.jpg$/i, '.webp'),
+ cleanSrc.replace(/\.jpg$/i, '.JPG')
+ ])).filter(Boolean);
+ let idx = 0;
+ imgEl.onerror = function() {
+ idx += 1;
+ if (idx < variants.length) {
+ imgEl.src = variants[idx];
+ } else {
+ imgEl.onerror = null;
+ imgEl.style.display = 'none';
+ }
+ };
+ imgEl.src = variants[0];
+ }
+
+ // Item Detail Modal Handler (Matching Image 5 layout)
+ function openItemModal(id) {
+ activeItem = MENU_DATA.find(i => i.id === id);
+ if (!activeItem) return;
+
+ const detailImg = document.getElementById('detail-img');
+ detailImg.alt = activeItem.name;
+ bindDishImageFallback(detailImg, activeItem.image);
+ document.getElementById('detail-title').innerText = activeItem.name;
+ document.getElementById('detail-subtitle').innerText = activeItem.category;
+ document.getElementById('detail-price').innerText = `৳${activeItem.price}`;
+ document.getElementById('detail-desc').innerText = activeItem.desc;
+ 
+// Ingredients list
+ const ingContainer = document.getElementById('detail-ingredients');
+ ingContainer.innerHTML = activeItem.ingredients.map(ing => `
+ <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-200/80 text-stone-700 text-[11px] font-medium">
+ <i class="fa-solid fa-check text-[10px] text-brandOlive"></i> ${ing}
+ </span>
+ `).join('');
+
+ // Open Modal
+ const modal = document.getElementById('item-detail-modal');
+ const card = document.getElementById('item-detail-card');
+ modal.classList.remove('opacity-0', 'pointer-events-none');
+ card.classList.remove('translate-y-10');
+ document.body.classList.add('modal-open');
+ }
+
+
+ // Shopping cart: persistent cart, quantity controls and WhatsApp checkout.
+ function money(amount) { return `৳${Number(amount || 0).toLocaleString('en-BD')}`; }
+ function saveCart() { localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart)); }
+ function cartSubtotal() { return cart.reduce((sum, entry) => sum + entry.price * entry.qty, 0); }
+ function showCartToast(message) {
+ const toast = document.getElementById('cartToast');
+ toast.textContent = message;
+ toast.classList.add('show');
+ clearTimeout(showCartToast.timer);
+ showCartToast.timer = setTimeout(() => toast.classList.remove('show'), 2200);
+ }
+ function addToCart(id) {
+ const item = MENU_DATA.find(entry => entry.id === Number(id));
+ if (!item) return;
+ const existing = cart.find(entry => entry.id === item.id);
+ if (existing) existing.qty += 1;
+ else cart.push({ id: item.id, name: item.name, price: item.price, image: item.image, qty: 1 });
+ saveCart(); renderCart(); showCartToast(`${item.name} added to your cart`);
+ }
+ function addActiveItemToCart() {
+ if (!activeItem) return;
+ addToCart(activeItem.id);
+ closeItemModal();
+ }
+ function renderCart() {
+ const count = cart.reduce((sum, entry) => sum + entry.qty, 0);
+ document.getElementById('cartCount').textContent = count;
+ document.getElementById('cartTotal').textContent = money(cartSubtotal());
+ const container = document.getElementById('cartItems');
+ if (!cart.length) {
+ container.innerHTML = `<div class="py-12 text-center text-stone-500"><div class="text-4xl mb-3">♡</div><h3 class="font-semibold text-stone-800">Your cart is waiting.</h3><p class="text-xs mt-1">Add a few favourites to get started.</p><button type="button" onclick="closeCart();showView('menu')" class="mt-4 text-xs font-semibold text-brandOlive">Browse menu →</button></div>`;
+ return;
+ }
+ container.innerHTML = cart.map(entry => `
+ <div class="cart-item">
+ <img src="${entry.image}" alt="${entry.name}" onerror="this.style.visibility='hidden'">
+ <div class="min-w-0">
+ <div class="flex items-start justify-between gap-2"><h3 class="text-sm font-semibold text-stone-900 leading-snug">${entry.name}</h3><b class="text-sm whitespace-nowrap">${money(entry.price * entry.qty)}</b></div>
+ <p class="text-xs text-stone-500 mt-1">${money(entry.price)} each</p>
+ <div class="qty-control"><button type="button" onclick="changeCartQuantity(${entry.id},-1)" aria-label="Decrease ${entry.name}">−</button><span class="text-xs font-semibold min-w-3 text-center">${entry.qty}</span><button type="button" onclick="changeCartQuantity(${entry.id},1)" aria-label="Increase ${entry.name}">+</button><button type="button" class="remove-item" onclick="removeFromCart(${entry.id})" aria-label="Remove ${entry.name}"><i class="fa-regular fa-trash-can"></i></button></div>
+ </div>
+ </div>
+ `).join('');
+ }
+ function changeCartQuantity(id, delta) {
+ const entry = cart.find(item => item.id === Number(id));
+ if (!entry) return;
+ entry.qty += delta;
+ if (entry.qty <= 0) cart = cart.filter(item => item.id !== Number(id));
+ saveCart(); renderCart();
+ }
+ function removeFromCart(id) { cart = cart.filter(item => item.id !== Number(id)); saveCart(); renderCart(); }
+ function clearCart() { cart = []; saveCart(); renderCart(); showCartToast('Cart cleared'); }
+ function openCart() {
+ document.getElementById('cartDrawer').classList.add('open');
+ document.getElementById('cartBackdrop').classList.add('open');
+ document.getElementById('cartDrawer').setAttribute('aria-hidden', 'false');
+ document.body.classList.add('modal-open');
+ }
+ function closeCart() {
+ document.getElementById('cartDrawer').classList.remove('open');
+ document.getElementById('cartBackdrop').classList.remove('open');
+ document.getElementById('cartDrawer').setAttribute('aria-hidden', 'true');
+ if (!document.getElementById('item-detail-modal').classList.contains('opacity-0')) document.body.classList.add('modal-open');
+ else document.body.classList.remove('modal-open');
+ }
+ function checkout() {
+ if (!cart.length) { showCartToast('Your cart is empty'); return; }
+ const lines = cart.map((entry, index) => `${index + 1}. ${entry.name} × ${entry.qty} — ${money(entry.price * entry.qty)}`);
+ const message = [
+ "Hello 2Bs! I'd like to place an order:",
+ "",
+ lines.join('\n'),
+ "",
+ `Subtotal: ${money(cartSubtotal())}`,
+ "",
+ "Please confirm availability and delivery/pickup details."
+ ].join('\n');
+ window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+ }
+ document.addEventListener('keydown', event => { if (event.key === 'Escape') { closeCart(); closeItemModal(); } });
+
+ function closeItemModal() {
+ const modal = document.getElementById('item-detail-modal');
+ const card = document.getElementById('item-detail-card');
+ card.classList.add('translate-y-10');
+ modal.classList.add('opacity-0', 'pointer-events-none');
+ if (!document.getElementById('cartDrawer').classList.contains('open')) {
+ document.body.classList.remove('modal-open');
+ }
+ }
+
+ </script>
+</body>
+</html>
